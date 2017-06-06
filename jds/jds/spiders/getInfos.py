@@ -5,7 +5,7 @@ from jds.items import JdsItem, ItemDict
 
 class getInfosSpider(scrapy.Spider):
     name = "getInfos"
-    start_urls = ['https://list.jd.com/list.html?cat=670,671,672&page='+str(i) for i in range(1, 100)]
+    start_urls = ['https://list.jd.com/list.html?cat=670,671,672&page='+str(i) for i in range(200, 400)]
     
     def parse(self, response):  # 解析搜索页  
         sel = scrapy.Selector(response)  # Xpath选择器  //*[@id="plist"]/ul/li[1]
@@ -30,18 +30,16 @@ class getInfosSpider(scrapy.Spider):
         #收集相关信息
         item1['computerBrand'] = sel.xpath('//*[@id="parameter-brand"]/li/a[1]/text()').extract()
         infos_lst = sel.xpath('//ul[@class="parameter2 p-parameter-list"]/li/text()').extract()
-        #可能没有电脑类型和厚度，先赋值以防错误
-        item1["computerType"] = ""
-        item1["houdu"] = ""
+        #可能没有一些参数，先赋值以防错误
+        for item in ItemDict.itemDict:
+            item1[ItemDict.itemDict[item]] = ""
 
         for info in infos_lst:
             kv = info.split('：')
             if kv[0] in ItemDict.itemDict:
                 item1[ItemDict.itemDict[kv[0]]] = kv[1]
             else:
-                pass        
-        # print("*****brand: {}".format(item1['computerBrand']))
-        # print(item1)
+                pass
 
         infos_lst = sel.xpath('//div[@class="Ptable"]/div[1]/dl/dd/text()|//div[@class="Ptable"]/div[1]/dl/dt/text()').extract()
         for i in range(len(infos_lst)):
@@ -51,24 +49,22 @@ class getInfosSpider(scrapy.Spider):
         # print('***************:{}'.format(infos_lst))
 
         #给显卡判定是否抓取成功，否则进行详细参数抓取
-        if 'xianka' in item1:
-            if item1['xianka'] == '其他':
-                try:
-                    xkcheck = sel.xpath('//div[@class="Ptable"]/div/h3[contains(text(),"显卡")]/parent::*/dl/dt/text()|//div[@class="Ptable"]/div/h3[contains(text(),"显卡")]/parent::*/dl/dd/text()').extract()
-                    for i in range(len(xkcheck)):
-                        if xkcheck[i] == '显示芯片':
-                            item1['xianka'] = xkcheck[i+1]
-                            break
-                except:
-                    pass
-        
-        if 'screenInches' in item1:
-            if item1['screenInches'] == '其他':
-                try:
-                    str1 = sel.xpath('//div[@class="sku-name"]/text()').extract()
-                    item1['screenInches'] = re.search('(\d*)\.(\d*)英寸',str1[0]).group(0)
-                except Exception:
-                    print("error")
+        if item1['xianka'] == '其他':
+            try:
+                xkcheck = sel.xpath('//div[@class="Ptable"]/div/h3[contains(text(),"显卡")]/parent::*/dl/dt/text()|//div[@class="Ptable"]/div/h3[contains(text(),"显卡")]/parent::*/dl/dd/text()').extract()
+                for i in range(len(xkcheck)):
+                    if xkcheck[i] == '显示芯片':
+                        item1['xianka'] = xkcheck[i+1]
+                        break
+            except:
+                pass
+    
+        if item1['screenInches'] == '其他':
+            try:
+                str1 = sel.xpath('//div[@class="sku-name"]/text()').extract()
+                item1['screenInches'] = re.search('(\d*)\.(\d*)英寸',str1[0]).group(0)
+            except Exception:
+                print("error")
 
         url = "http://club.jd.com/clubservice.aspx?method=GetCommentsCount&referenceIds=" + str(item1['ID'][0])
         yield scrapy.Request(url, meta={'item': item1}, callback=self.parse_getCommentnum)
