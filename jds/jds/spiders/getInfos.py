@@ -51,7 +51,7 @@ class getInfosSpider(scrapy.Spider):
         # print('***************:{}'.format(infos_lst))
 
         #给显卡判定是否抓取成功，否则进行详细参数抓取
-        if item.has_key('xianka'):
+        if 'xianka' in item1:
             if item1['xianka'] == '其他':
                 try:
                     xkcheck = sel.xpath('//div[@class="Ptable"]/div/h3[contains(text(),"显卡")]/parent::*/dl/dt/text()|//div[@class="Ptable"]/div/h3[contains(text(),"显卡")]/parent::*/dl/dd/text()').extract()
@@ -61,13 +61,14 @@ class getInfosSpider(scrapy.Spider):
                             break
                 except:
                     pass
-
-        if item1['screenInches'] == '其他':
-            try:
-                str1 = sel.xpath('//div[@class="sku-name"]/text()').extract()
-                item1['screenInches'] = re.search('(\d*)\.(\d*)英寸',str1[0]).group(0)
-            except Exception:
-                print("error")
+        
+        if 'screenInches' in item1:
+            if item1['screenInches'] == '其他':
+                try:
+                    str1 = sel.xpath('//div[@class="sku-name"]/text()').extract()
+                    item1['screenInches'] = re.search('(\d*)\.(\d*)英寸',str1[0]).group(0)
+                except Exception:
+                    print("error")
 
         url = "http://club.jd.com/clubservice.aspx?method=GetCommentsCount&referenceIds=" + str(item1['ID'][0])
         yield scrapy.Request(url, meta={'item': item1}, callback=self.parse_getCommentnum)
