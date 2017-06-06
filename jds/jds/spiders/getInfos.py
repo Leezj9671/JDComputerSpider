@@ -5,7 +5,8 @@ from jds.items import JdsItem, ItemDict
 
 class getInfosSpider(scrapy.Spider):
     name = "getInfos"
-    start_urls = ['https://list.jd.com/list.html?cat=670,671,672&page='+str(i) for i in range(200, 400)]
+    allowed_domains = ['jd.com', 'pm.3.cn']
+    start_urls = ['https://list.jd.com/list.html?cat=670,671,672&page='+str(i) for i in range(1, 10)]
     
     def parse(self, response):  # 解析搜索页  
         sel = scrapy.Selector(response)  # Xpath选择器  //*[@id="plist"]/ul/li[1]
@@ -13,6 +14,9 @@ class getInfosSpider(scrapy.Spider):
         # print('****goods: {}'.format(len(goods)))
         for good in goods:
             item1 = JdsItem()
+            #可能没有一些参数，先赋值以防错误       
+            for item in ItemDict.itemDict:
+                item1[ItemDict.itemDict[item]] = ""
             item1['ID'] = good.xpath('./div/@data-sku').extract()
             # print(good.xpath('./div/div[@class="p-name"]/a/@href').extract())
             
@@ -29,10 +33,10 @@ class getInfosSpider(scrapy.Spider):
         sel = scrapy.Selector(response)
         #收集相关信息
         item1['computerBrand'] = sel.xpath('//*[@id="parameter-brand"]/li/a[1]/text()').extract()
+        if item1['computerBrand'] is None:
+            item1['computerBrand'] == ['无']
         infos_lst = sel.xpath('//ul[@class="parameter2 p-parameter-list"]/li/text()').extract()
-        #可能没有一些参数，先赋值以防错误
-        for item in ItemDict.itemDict:
-            item1[ItemDict.itemDict[item]] = ""
+        
 
         for info in infos_lst:
             kv = info.split('：')

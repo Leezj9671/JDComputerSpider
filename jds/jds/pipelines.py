@@ -16,12 +16,18 @@ class JdsPipeline(object):
         '待机时长', '厚度', '1星评价', '2星评价', '3星评价', '4星评价', '5星评价', '评论总数'])
     
     def process_item(self, item, spider):
+        # try:
         line = [item['ID'][0], item['link'][0], item['computerBrand'][0], item['computerName'], \
             item['computerType'], item['price'], item['color'], item['screenInches'], \
             item['screenFb'], item['cpu'], item['mem'], item['disk'], item['xianka'], \
             item['xiancun'], item['system'], item['weight'], item['daijishichang'], \
             item['houdu'], item['score1count'], item['score2count'], item['score3count'], \
-            item['score4count'], item['score5count'], item['comment_num']]
+            item['score4count'], item['score5count'], item['comment_num']
+        ]
         self.ws.append(line)  # 将数据以行的形式添加到xlsx中
         self.wb.save('./jd_laptop.xlsx')  # 保存xlsx文件
+        # except IndexError:
+        #     print('*************************error****************************')
+        #     print(item)
+        
         return item
