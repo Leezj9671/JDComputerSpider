@@ -50,16 +50,18 @@ class getInfosSpider(scrapy.Spider):
                 break
         # print('***************:{}'.format(infos_lst))
 
-        #给显卡判定是否抓取成功，否则进行详细参数抓取 
-        if item1['xianka'] == '其他':
-            try:
-                xkcheck = sel.xpath('//div[@class="Ptable"]/div/h3[contains(text(),"显卡")]/parent::*/dl/dt/text()|//div[@class="Ptable"]/div/h3[contains(text(),"显卡")]/parent::*/dl/dd/text()').extract()
-                for i in range(len(xkcheck)):
-                    if xkcheck[i] == '显示芯片':
-                        item1['xianka'] = xkcheck[i+1]
-                        break
-            except:
-                pass
+        #给显卡判定是否抓取成功，否则进行详细参数抓取
+        if item.has_key('xianka'):
+            if item1['xianka'] == '其他':
+                try:
+                    xkcheck = sel.xpath('//div[@class="Ptable"]/div/h3[contains(text(),"显卡")]/parent::*/dl/dt/text()|//div[@class="Ptable"]/div/h3[contains(text(),"显卡")]/parent::*/dl/dd/text()').extract()
+                    for i in range(len(xkcheck)):
+                        if xkcheck[i] == '显示芯片':
+                            item1['xianka'] = xkcheck[i+1]
+                            break
+                except:
+                    pass
+
         if item1['screenInches'] == '其他':
             try:
                 str1 = sel.xpath('//div[@class="sku-name"]/text()').extract()
@@ -74,10 +76,7 @@ class getInfosSpider(scrapy.Spider):
         item1 = response.meta['item']  
         # response.body是一个json格式的  
         # print(response.body)
-        try:
-            js = json.loads(response.body)
-        except Exception:
-            print(response.body)
+        js = json.loads(response.body)
         # js = json.loads(str)
         # print(js['CommentsCount'][0]['Score1Count'])
         item1['score1count'] = js['CommentsCount'][0]['Score1Count']  
